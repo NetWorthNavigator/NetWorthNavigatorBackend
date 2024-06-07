@@ -23,6 +23,9 @@ jobs:
       run: |
         gcloud auth list
         gcloud config list
+        
+    - name: Debug environment variables
+      run: env | grep -v GCP_SA_KEY
 
     - name: Build and push Docker image
       run: |
