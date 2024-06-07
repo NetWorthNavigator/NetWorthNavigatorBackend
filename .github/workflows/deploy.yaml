@@ -17,8 +17,9 @@ jobs:
 
     - name: Build and push Docker image
       run: |
-        docker build -t ghcr.io/${{ github.repository }}/networthnavigator:${{ github.sha }} .
-        docker push ghcr.io/${{ github.repository }}/networthnavigator:${{ github.sha }}
+        REPO_NAME=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+        docker build -t ghcr.io/$REPO_NAME/networthnavigator:${{ github.sha }} .
+        docker push ghcr.io/$REPO_NAME/networthnavigator:${{ github.sha }}
 
     - name: Authenticate with Google Cloud
       uses: google-github-actions/auth@v0.5.0
@@ -27,4 +28,5 @@ jobs:
 
     - name: Deploy to Google Cloud Run
       run: |
-        gcloud run deploy networthnavigator --image ghcr.io/${{ github.repository }}/networthnavigator:${{ github.sha }} --region us-central1 --platform managed --allow-unauthenticated
+        REPO_NAME=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+        gcloud run deploy networthnavigator --image ghcr.io/$REPO_NAME/networthnavigator:${{ github.sha }} --region us-central1 --platform managed --allow-unauthenticated
