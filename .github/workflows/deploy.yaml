@@ -18,6 +18,12 @@ jobs:
       with:
         project_id: ${{ secrets.GCP_PROJECT_ID }}
 
+
+    - name: Debug gcloud auth
+      run: |
+        gcloud auth list
+        gcloud config list
+
     - name: Build and push Docker image
       run: |
         docker build -t gcr.io/${{ secrets.GCP_PROJECT_ID }}/networthnavigator .
