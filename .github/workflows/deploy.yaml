@@ -26,3 +26,7 @@ jobs:
       run: |
         docker build -t gcr.io/${{ secrets.GCP_PROJECT_ID }}/networthnavigator .
         docker push gcr.io/${{ secrets.GCP_PROJECT_ID }}/networthnavigator
+
+    - name: Deploy to Google Cloud Run
+      run: |
+        gcloud run deploy networthnavigator --image gcr.io/${{ secrets.GCP_PROJECT_ID }}/networthnavigator --region us-central1 --platform managed --allow-unauthenticated
