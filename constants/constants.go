@@ -1,4 +1,4 @@
-package main
+package constants
 
 import (
 	"bufio"
@@ -9,6 +9,10 @@ import (
 var (
 	DATABASE_URL     string
 	DATABASE_API_KEY string
+	PLAID_SECRET     string
+	PLAID_CLIENT_ID  string
+	CLIENT_NAME      string
+	JWT_SECRET       string
 )
 
 func loadEnv() {
@@ -40,4 +44,17 @@ func init() {
 	if DATABASE_API_KEY == "" {
 		DATABASE_API_KEY = os.Getenv("DATABASE_API_KEY_DEV")
 	}
+
+	PLAID_CLIENT_ID = os.Getenv("PLAID_CLIENT_ID")
+	if PLAID_CLIENT_ID == "" {
+		PLAID_CLIENT_ID = os.Getenv("PLAID_CLIENT_ID_DEV")
+	}
+
+	PLAID_SECRET = os.Getenv("PLAID_SECRET")
+	if PLAID_SECRET == "" {
+		PLAID_SECRET = os.Getenv("PLAID_SECRET_DEV")
+	}
+	CLIENT_NAME = "NetWorthNavigator"
+	JWT_SECRET = os.Getenv("JWT_SECRET")
+
 }
