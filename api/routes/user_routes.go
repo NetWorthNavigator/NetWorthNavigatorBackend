@@ -4,8 +4,11 @@ import (
 	"net/http"
 
 	"github.com/NetWorthNavigator/NetWorthNavigatorBackend/api/controllers"
+	"github.com/NetWorthNavigator/NetWorthNavigatorBackend/db"
 )
 
-func SetupUserRoutes() {
-	http.HandleFunc("/user", controllers.UserHandler)
+func SetupUserRoutes(userDB *db.UserDB) {
+	http.HandleFunc("/user", func(w http.ResponseWriter, r *http.Request) {
+		controllers.UserHandler(userDB, w, r)
+	})
 }

@@ -22,7 +22,9 @@ func main() {
 	InitDB(DBClient)
 
 	accessTokenDB := db.NewAccessTokenDB(DBClient)
+	userDB := db.NewUserDB(DBClient)
 
-	SetupRouter(accessTokenDB)
+	SetupRouter(accessTokenDB, userDB)
+
 	http.ListenAndServe(":8080", nil)
 }

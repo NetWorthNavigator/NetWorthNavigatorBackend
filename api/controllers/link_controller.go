@@ -102,6 +102,6 @@ func CreateAccessTokenHandler(accessTokenDB *db.AccessTokenDB, w http.ResponseWr
 		http.Error(w, "Error parsing exchange response", http.StatusInternalServerError)
 		return
 	}
-	accessToken.UserID = 1
+	accessToken.UserID = "test@gmail.com"
 	accessTokenDB.CreateAccessToken(accessToken)
 }

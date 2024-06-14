@@ -5,11 +5,11 @@ import (
 	"github.com/NetWorthNavigator/NetWorthNavigatorBackend/db"
 )
 
-func SetupRouter(accessTokenDB *db.AccessTokenDB) {
+func SetupRouter(accessTokenDB *db.AccessTokenDB, userDB *db.UserDB) {
 
 	routes.SetupLinkRoutes(accessTokenDB)
 
-	routes.SetupUserRoutes()
+	routes.SetupUserRoutes(userDB)
 
 	//http.HandleFunc("/test", routes.Test)
 }

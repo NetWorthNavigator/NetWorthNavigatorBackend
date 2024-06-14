@@ -7,5 +7,6 @@ import (
 
 func InitDB(DBClient *gorm.DB) {
 	DBClient.AutoMigrate(&models.PlaidAccessToken{})
+	DBClient.AutoMigrate(&models.User{})
 
 }
