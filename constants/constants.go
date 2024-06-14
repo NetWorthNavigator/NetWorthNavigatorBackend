@@ -13,6 +13,7 @@ var (
 	PLAID_CLIENT_ID  string
 	CLIENT_NAME      string
 	JWT_SECRET       string
+	DB_URL           string
 )
 
 func loadEnv() {
@@ -35,14 +36,9 @@ func loadEnv() {
 func init() {
 	loadEnv()
 
-	DATABASE_URL = os.Getenv("DATABASE_API_URL")
+	DATABASE_URL = os.Getenv("DATABASE_URL")
 	if DATABASE_URL == "" {
 		DATABASE_URL = os.Getenv("DATABASE_API_URL_DEV")
-	}
-
-	DATABASE_API_KEY = os.Getenv("DATABASE_API_KEY")
-	if DATABASE_API_KEY == "" {
-		DATABASE_API_KEY = os.Getenv("DATABASE_API_KEY_DEV")
 	}
 
 	PLAID_CLIENT_ID = os.Getenv("PLAID_CLIENT_ID")
@@ -56,5 +52,4 @@ func init() {
 	}
 	CLIENT_NAME = "NetWorthNavigator"
 	JWT_SECRET = os.Getenv("JWT_SECRET")
-
 }

@@ -29,7 +29,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	//InMemoryUserDB[user.Username] = user
 
 	w.WriteHeader(http.StatusCreated)
-	fmt.Fprintf(w, "User %s successfully registered", user.Username)
+	fmt.Fprintf(w, "User %s successfully registered", user.Email)
 }
 
 // LoginHandler handles user login

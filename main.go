@@ -2,25 +2,27 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 
-	"github.com/NetWorthNavigator/NetWorthNavigatorBackend/api/routes"
 	"github.com/NetWorthNavigator/NetWorthNavigatorBackend/constants"
-	"github.com/supabase-community/supabase-go"
+	"github.com/NetWorthNavigator/NetWorthNavigatorBackend/db"
+
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 func main() {
 
-	client, err := supabase.NewClient(constants.DATABASE_URL, constants.DATABASE_API_KEY, nil)
+	dsn := constants.DATABASE_URL
+	DBClient, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		fmt.Println("cannot initalize client", err)
+		fmt.Println("failed to connect database", err)
+		return
 	}
-	data, count, err := client.From("test").Select("*", "exact", false).Execute()
-	log.Print(data, count)
+	InitDB(DBClient)
 
-	http.HandleFunc("/create_link_token", routes.CreateLinkTokenHandler)
-	http.HandleFunc("/create_access_token", routes.CreateAccessTokenHandler)
-	http.HandleFunc("/test", routes.Test)
+	accessTokenDB := db.NewAccessTokenDB(DBClient)
+
+	SetupRouter(accessTokenDB)
 	http.ListenAndServe(":8080", nil)
 }
