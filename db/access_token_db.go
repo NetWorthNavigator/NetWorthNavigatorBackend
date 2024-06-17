@@ -25,11 +25,11 @@ func (atdb *AccessTokenDB) CreateAccessToken(token models.PlaidAccessToken) erro
 }
 
 // GetAccessToken retrieves an access token based on a given ID.
-func (atdb *AccessTokenDB) GetAccessToken(id string) (*models.PlaidAccessToken, error) {
+func (atdb *AccessTokenDB) GetAccessToken(email string) (*models.PlaidAccessToken, error) {
 	var token models.PlaidAccessToken
-	result := atdb.DBClient.First(&token, "id = ?", id)
+	result := atdb.DBClient.First(&token, "email = ?", email)
 	if result.Error != nil {
-		log.Printf("Error retrieving access token with ID %s: %v", id, result.Error)
+		log.Printf("Error retrieving access token with ID %s: %v", email, result.Error)
 		return nil, result.Error
 	}
 	return &token, nil

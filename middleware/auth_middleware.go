@@ -1,53 +1,59 @@
 package middleware
 
 import (
+	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/NetWorthNavigator/NetWorthNavigatorBackend/constants"
+	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
 )
 
-// Claims struct to encode/decode JWT payload
-type Claims struct {
-	jwt.StandardClaims
-	Username string
-}
-
-var jwtKey = []byte(constants.JWT_SECRET)
-
-func AuthMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		cookie, err := r.Cookie("token")
-		if err != nil {
-			if err == http.ErrNoCookie {
-				http.Error(w, "Unauthorized", http.StatusUnauthorized)
-				return
-			}
-			http.Error(w, "Bad request", http.StatusBadRequest)
+// AuthMiddleware extracts user info from JWT token and stores it in the context
+func AuthMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		authHeader := c.GetHeader("Authorization")
+		if authHeader == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header is required"})
+			c.Abort()
 			return
 		}
 
-		tokenString := cookie.Value
-		claims := &Claims{}
+		// Assuming the token is prefixed with "Bearer "
+		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 
-		token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
-			return jwtKey, nil
+		// Parse the token
+		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+			// Make sure the token's algorithm is what you expect
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+			}
+			return []byte(constants.JWT_SECRET), nil
 		})
 
 		if err != nil {
-			if err == jwt.ErrSignatureInvalid {
-				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+			c.Abort()
+			return
+		}
+
+		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+			// Extract user information from claims
+			email, ok := claims["email"].(string)
+			if !ok {
+				c.JSON(http.StatusUnauthorized, gin.H{"error": "Email not found in token"})
+				c.Abort()
 				return
 			}
-			http.Error(w, "Bad request", http.StatusBadRequest)
+
+			// Store user information in the context
+			c.Set("email", email)
+			c.Next()
+		} else {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+			c.Abort()
 			return
 		}
-
-		if !token.Valid {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
-			return
-		}
-
-		next.ServeHTTP(w, r)
-	})
+	}
 }

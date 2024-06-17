@@ -1,119 +1,92 @@
 package controllers
 
 import (
-	"encoding/json"
 	"net/http"
 
-	"github.com/NetWorthNavigator/NetWorthNavigatorBackend/db"
+	"github.com/NetWorthNavigator/NetWorthNavigatorBackend/interfaces"
 	"github.com/NetWorthNavigator/NetWorthNavigatorBackend/models"
 	"github.com/NetWorthNavigator/NetWorthNavigatorBackend/utils"
+	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 )
 
-func UserHandler(userDB *db.UserDB, w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodGet:
-		handleGetUser(userDB, w, r)
-	case http.MethodPost:
-		handlePostUser(userDB, w, r)
-	case http.MethodPut:
-		handlePutUser(userDB, w, r)
-	case http.MethodDelete:
-		handleDeleteUser(userDB, w, r)
-	default:
-		http.Error(w, "Unsupported HTTP method", http.StatusMethodNotAllowed)
-	}
-}
-
-// handleGetUser handles GET requests for the /user route
-func handleGetUser(userDB *db.UserDB, w http.ResponseWriter, r *http.Request) {
-	// Assuming the user ID is passed as a query parameter
-	id := r.URL.Query().Get("id")
-	if id == "" {
-		http.Error(w, "User ID is required", http.StatusBadRequest)
+// GetUser handles GET requests for the /user route
+func GetUser(c *gin.Context, userDB interfaces.UserDB, email string) {
+	if email == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "User Email is required"})
 		return
 	}
 
-	user, err := userDB.GetUser(id)
+	user, err := userDB.GetUser(email)
 	if err != nil {
-		http.Error(w, "User not found", http.StatusNotFound)
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
 	}
 
-	json.NewEncoder(w).Encode(user)
+	c.JSON(http.StatusOK, user)
 }
 
-// / handlePostUser handles POST requests for the /user route
-func handlePostUser(userDB *db.UserDB, w http.ResponseWriter, r *http.Request) {
+// PostUser handles POST requests for the /user route
+func PostUser(c *gin.Context, userDB interfaces.UserDB) {
 	var user models.User
-	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
-		http.Error(w, "Error decoding request body", http.StatusBadRequest)
+	if err := c.ShouldBindJSON(&user); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Error decoding request body"})
 		return
 	}
 
-	// Normalize the email address
 	normalizedEmail := utils.NormalizeEmail(user.Email)
-	user.Email = normalizedEmail // Update the user's email to the normalized one
+	user.Email = normalizedEmail
 
-	// Check if the email already exists
 	_, err := userDB.GetUser(user.Email)
 	if err == nil {
-		http.Error(w, "Email already in use", http.StatusBadRequest)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Email already in use"})
 		return
 	}
-	// Assuming the error returned when no user is found is a specific error, you might want to check for that
-	// and continue only if the error is about not finding the user.
 
-	// Hash the password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
-		http.Error(w, "Error hashing password", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error hashing password"})
 		return
 	}
 	user.Password = string(hashedPassword)
 
-	// Now, user.Password contains the hashed password
 	if err := userDB.CreateUser(user); err != nil {
-		http.Error(w, "Error creating user", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error creating user"})
 		return
 	}
 
-	w.WriteHeader(http.StatusCreated)
-	// Consider not returning the password, even if it's hashed
-	user.Password = ""
-	json.NewEncoder(w).Encode(user)
+	c.JSON(http.StatusCreated, gin.H{})
 }
 
-// handlePutUser handles PUT requests for the /user route
-func handlePutUser(userDB *db.UserDB, w http.ResponseWriter, r *http.Request) {
+// PutUser handles PUT requests for the /user route
+func PutUser(c *gin.Context, userDB interfaces.UserDB, email string) {
 	var user models.User
-	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
-		http.Error(w, "Error decoding request body", http.StatusBadRequest)
+	if err := c.ShouldBindJSON(&user); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Error decoding request body"})
 		return
 	}
 
 	if err := userDB.UpdateUser(user); err != nil {
-		http.Error(w, "Error updating user", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error updating user"})
 		return
 	}
 
-	json.NewEncoder(w).Encode(user)
+	c.JSON(http.StatusCreated, gin.H{})
 }
 
-// handleDeleteUser handles DELETE requests for the /user route
-func handleDeleteUser(userDB *db.UserDB, w http.ResponseWriter, r *http.Request) {
-	id := r.URL.Query().Get("id")
+// DeleteUser handles DELETE requests for the /user route
+func DeleteUser(c *gin.Context, userDB interfaces.UserDB, email string) {
+	id := c.Query("id")
 	if id == "" {
-		http.Error(w, "User ID is required", http.StatusBadRequest)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "User ID is required"})
 		return
 	}
 
 	err := userDB.DeleteUser(id)
 	if err != nil {
-		http.Error(w, "Error deleting user", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error deleting user"})
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{"message": "User deleted successfully"})
+	c.JSON(http.StatusOK, gin.H{"message": "User deleted successfully"})
 }

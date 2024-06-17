@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
-	"net/http"
 
 	"github.com/NetWorthNavigator/NetWorthNavigatorBackend/constants"
 	"github.com/NetWorthNavigator/NetWorthNavigatorBackend/db"
+	"github.com/gin-gonic/gin"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -23,8 +23,12 @@ func main() {
 
 	accessTokenDB := db.NewAccessTokenDB(DBClient)
 	userDB := db.NewUserDB(DBClient)
+	PlaidAccountDB := db.NewPlaidAccountDB(DBClient)
+	itemDB := db.NewItemDB(DBClient)
 
-	SetupRouter(accessTokenDB, userDB)
+	router := gin.Default()
 
-	http.ListenAndServe(":8080", nil)
+	SetupRouter(router, accessTokenDB, userDB, PlaidAccountDB, itemDB)
+
+	router.Run(":8080")
 }
